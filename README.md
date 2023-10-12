@@ -48,3 +48,25 @@ of the post-checkout file with what you can see in
 !important that here you can use the `-g` flag which indicates that no need to
 check if the command called from a git repository - so it will run a bit
 faster.
+
+#### set alias
+
+you might want to set an alias to save some typing
+
+```sh
+git config --global alias.bh branch-history
+```
+
+## Usage
+
+Save the current branch
+
+```sh
+git branch-history save
+```
+
+Checkout to previous branch
+
+```sh
+git branch-history p
+```
