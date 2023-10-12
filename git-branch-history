@@ -129,24 +129,31 @@ while [ $# -gt 0 ];do
       ;;
     save|s)
       save_hist_item
+      exit
       ;;
     previous|p)
       checkout_previous
+      exit
       ;;
     previous-n|n)
       checkout_previous_n $2
+      exit
       ;;
     list|ls)
       list
+      exit
       ;;
     compact)
       compact_history
+      exit
       ;;
     truncate)
       truncate_history $2
+      exit
       ;;
     help|h)
       help
+      exit
       ;;
     *)
       help >&2
