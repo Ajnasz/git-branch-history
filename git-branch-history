@@ -1,0 +1,116 @@
+#!/bin/zsh
+
+
+is_inside_git_dir() {
+  git rev-parse --is-inside-git-dir > /dev/null 2>&1
+}
+
+get_current_branch() {
+  git rev-parse --abbrev-ref HEAD
+}
+
+get_git_dir() {
+  git rev-parse --git-dir
+}
+
+get_brhist_file_path() {
+  echo "$(get_git_dir)/.git-brhist"
+}
+get_n_branch() {
+  tail -n $1 "$(get_brhist_file_path)" | head -n 1
+}
+
+get_last_branch() {
+  get_n_branch 1
+}
+
+save_hist_item() {
+  if ! is_inside_git_dir; then
+    echo "Not inside a git repository" >&2
+    return 1
+  fi
+  if [ ! -f "$(get_brhist_file_path)" ]; then
+    touch "$(get_brhist_file_path)"
+  fi
+  if [ "$(get_current_branch)" = "$(get_last_branch)" ]; then
+    return
+  fi
+  get_current_branch >> "$(get_brhist_file_path)"
+}
+
+restore_previous() {
+  if [ $# -eq 1 ]; then
+    git checkout $1
+    return
+  fi
+  if [ ! -f "$(get_brhist_file_path)" ]; then
+    echo "No history file found" >&2
+    return 1
+  fi
+
+  local next_branch
+  next_branch="$(get_n_branch 2)"
+
+  if [ "$next_branch" = "$get_current_branch" ];then
+    return
+  fi
+  git checkout "$(get_n_branch 2)"
+}
+
+restore_n() {
+  if [ "$next_branch" = "$get_current_branch" ];then
+    return
+  fi
+  git checkout "$(tail -n $1 $(get_brhist_file_path) | head -n 1)"
+}
+
+list() {
+  cat "$(get_brhist_file_path)"
+}
+
+# removes duplicate entries
+compact_history() {
+  if [ ! -f "$(get_brhist_file_path)" ];then
+    return
+  fi
+  local tmpfile
+  tmpfile="$(mktemp)"
+  awk '!x[$0]++' "$(get_brhist_file_path)" > "$tmpfile"
+  mv $tmpfile "$(get_brhist_file_path)"
+}
+
+truncate_history() {
+  if [ ! -f "$(get_brhist_file_path)" ];then
+    return
+  fi
+  local tmpfile
+  tmpfile="$(mktemp)"
+  tail -n $1 "$(get_brhist_file_path)" > "$tmpfile"
+  mv $tmpfile "$(get_brhist_file_path)"
+}
+
+case "$1" in
+  save|s)
+    save_hist_item
+    ;;
+  restore|r)
+    restore_previous
+    ;;
+  restore-n|n)
+    restore_n $2
+    ;;
+  list|ls)
+    list
+    ;;
+  compact)
+    compact_history
+    ;;
+  truncate)
+    truncate_history $2
+    ;;
+  *)
+    echo "Usage: $0 {save|s|restore|r|restore-n|n|list|ls}"
+    exit 1
+esac
+
+# vi: ft=sh
