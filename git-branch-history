@@ -115,11 +115,11 @@ truncate_history() {
   local tmpfile
   tmpfile="$(mktemp)"
   tail -n $1 "$(get_brhist_file_path)" > "$tmpfile"
-  mv $tmpfile "$(get_brhist_file_path)"
+  mv "$tmpfile" "$(get_brhist_file_path)"
 }
 
 help() {
-  echo "Usage: git-branch-history {save|s|previous|p|previous-n|n|list|ls}"
+  echo "Usage: git-branch-history {save|s|previous|p|previous-n|n|list|ls|truncate|compact|help}"
 }
 
 while [ $# -gt 0 ];do

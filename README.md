@@ -63,10 +63,42 @@ Save the current branch
 
 ```sh
 git branch-history save
+# in short
+git branch-history s
 ```
 
 Checkout to previous branch
 
 ```sh
+git branch-history previous
+# in short
 git branch-history p
+```
+
+List the history:
+
+```sh
+git branch-history list
+# in short
+git branch-history ls
+```
+
+Checkout branch used before the previous branch:
+
+```sh
+git branch-history previous-n 2
+# in short
+git branch-history n 2
+```
+
+Remove duplicated entries
+
+```sh
+git branch-history compact
+```
+
+Keep the last `n` entries
+
+```sh
+git branch-history truncate 100
 ```
