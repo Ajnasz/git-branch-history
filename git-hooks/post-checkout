@@ -1,3 +1,3 @@
 #!/bin/sh
 
-git branch-history save
+git branch-history save -g

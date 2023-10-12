@@ -1,8 +1,34 @@
-#!/bin/zsh
+#!/bin/sh
+# Copyright (c) 2023 Lajos Koszti
 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+IN_GIT_DIR=0
 
 is_inside_git_dir() {
+  if [ $IN_GIT_DIR -eq 1 ]; then
+    return 0
+  fi
+
   git rev-parse --is-inside-git-dir > /dev/null 2>&1
+  return $?
 }
 
 get_current_branch() {
@@ -10,6 +36,11 @@ get_current_branch() {
 }
 
 get_git_dir() {
+  if ! is_inside_git_dir; then
+    echo "Not inside a git repository" >&2
+    return 1
+  fi
+
   git rev-parse --git-dir
 }
 
@@ -25,10 +56,6 @@ get_last_branch() {
 }
 
 save_hist_item() {
-  if ! is_inside_git_dir; then
-    echo "Not inside a git repository" >&2
-    return 1
-  fi
   if [ ! -f "$(get_brhist_file_path)" ]; then
     touch "$(get_brhist_file_path)"
   fi
@@ -89,28 +116,34 @@ truncate_history() {
   mv $tmpfile "$(get_brhist_file_path)"
 }
 
-case "$1" in
-  save|s)
-    save_hist_item
-    ;;
-  restore|r)
-    restore_previous
-    ;;
-  restore-n|n)
-    restore_n $2
-    ;;
-  list|ls)
-    list
-    ;;
-  compact)
-    compact_history
-    ;;
-  truncate)
-    truncate_history $2
-    ;;
-  *)
-    echo "Usage: $0 {save|s|restore|r|restore-n|n|list|ls}"
-    exit 1
-esac
+while [ $# -gt 0 ];do
+  case "$1" in
+    "-g")
+      IN_GIT_DIR=1
+      ;;
+    save|s)
+      save_hist_item
+      ;;
+    restore|r)
+      restore_previous
+      ;;
+    restore-n|n)
+      restore_n $2
+      ;;
+    list|ls)
+      list
+      ;;
+    compact)
+      compact_history
+      ;;
+    truncate)
+      truncate_history $2
+      ;;
+    *)
+      echo "Usage: $0 {save|s|restore|r|restore-n|n|list|ls}"
+      exit 1
+  esac
+  shift
+done
 
 # vi: ft=sh
