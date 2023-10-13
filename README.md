@@ -1,5 +1,4 @@
-Record branch git history so you can switch back to previous used branches more
-easily.
+List and checkout git previously used branches.
 
 ## Installation
 
@@ -15,57 +14,17 @@ configure the $PATH.
 
 Then you can use `git branch-history` command to execute the command.
 
-Run `git branch-history save` command whenever want to record the current
-branch.
-
 ### Save the branch on every branch change
-
-You can run the command and save the history automatically on every branch
-change if you add the `git branch-history save` action as a git `post-checkout`
-hook.
-
-Check if you already have it configured:
-```sh
-git config --global --get core.hookspath
-```
-
-#### core.hookspath not configured
-
-Run the following command:
-
-```sh
-mkdir ~/.git-hooks
-cp $PWD/git-hooks/post-checkout $HOME/.git-hooks/
-git config --global core.hookspath $HOME/git-hooks
-```
-
-#### core.hookspath configured
-
-If it set for you, open the `post-checkout` file there and add the save content
-of the post-checkout file with what you can see in
-[git-hooks/post-checkout](./git-hooks/post-checkout).
-
-!important that here you can use the `-g` flag which indicates that no need to
-check if the command called from a git repository - so it will run a bit
-faster.
 
 #### set alias
 
-you might want to set an alias to save some typing
+You might want to set an alias to save some typing
 
 ```sh
 git config --global alias.bh branch-history
 ```
 
 ## Usage
-
-Save the current branch
-
-```sh
-git branch-history save
-# in short
-git branch-history s
-```
 
 Checkout to previous branch
 
@@ -89,16 +48,4 @@ Checkout branch used before the previous branch:
 git branch-history previous-n 2
 # in short
 git branch-history n 2
-```
-
-Remove duplicated entries
-
-```sh
-git branch-history compact
-```
-
-Keep the last `n` entries
-
-```sh
-git branch-history truncate 100
 ```

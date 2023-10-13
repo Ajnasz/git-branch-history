@@ -20,117 +20,25 @@
 # SOFTWARE.
 
 
-IN_GIT_DIR=0
-
-is_inside_git_dir() {
-  if [ $IN_GIT_DIR -eq 1 ]; then
-    return 0
-  fi
-
-  git rev-parse --is-inside-git-dir > /dev/null 2>&1
-  return $?
-}
-
-get_current_branch() {
-  git rev-parse --abbrev-ref HEAD
-}
-
-get_git_dir() {
-  if ! is_inside_git_dir; then
-    echo "Not inside a git repository" >&2
-    return 1
-  fi
-
-  git rev-parse --git-dir
-}
-
-get_brhist_file_path() {
-  echo "$(get_git_dir)/.git-brhist"
-}
-get_n_branch() {
-  tail -n $1 "$(get_brhist_file_path)" | head -n 1
-}
-
-get_last_branch() {
-  get_n_branch 1
-}
-
-save_hist_item() {
-  if [ ! -f "$(get_brhist_file_path)" ]; then
-    touch "$(get_brhist_file_path)"
-  fi
-  if [ "$(get_current_branch)" = "$(get_last_branch)" ]; then
-    return
-  fi
-  get_current_branch >> "$(get_brhist_file_path)"
-}
-
 checkout_previous() {
-  if [ $# -eq 1 ]; then
-    git checkout $1
-    return
-  fi
-  if [ ! -f "$(get_brhist_file_path)" ]; then
-    echo "No history file found" >&2
-    return 1
-  fi
-
-  local new_branch
-  new_branch="$(get_n_branch 2)"
-
-  if [ "$new_branch" = "$get_current_branch" ];then
-    return
-  fi
-  git checkout "$(get_n_branch 2)"
+  git checkout -
 }
 
 checkout_previous_n() {
-  local new_branch
-  new_branch="$(get_n_branch $1)"
-  if [ "$new_branch" = "$get_current_branch" ];then
-    return
-  fi
-  git checkout "$new_branch"
+  git checkout @{-$1}
 }
 
 list() {
-  cat "$(get_brhist_file_path)"
-}
-
-# removes duplicate entries
-compact_history() {
-  if [ ! -f "$(get_brhist_file_path)" ];then
-    return
-  fi
-  local tmpfile
-  tmpfile="$(mktemp)"
-  awk '!x[$0]++' "$(get_brhist_file_path)" > "$tmpfile"
-  mv $tmpfile "$(get_brhist_file_path)"
-}
-
-truncate_history() {
-  if [ ! -f "$(get_brhist_file_path)" ];then
-    return
-  fi
-  local tmpfile
-  tmpfile="$(mktemp)"
-  tail -n $1 "$(get_brhist_file_path)" > "$tmpfile"
-  mv "$tmpfile" "$(get_brhist_file_path)"
+  items_to_keep=${1:-10}
+  git reflog | awk '/checkout: moving from/ { match($2, /{([0-9]+)}/, n); id=1+n[1];print id" "$6; }' | uniq -f 1 | sort -rn | tail -n $items_to_keep
 }
 
 help() {
-  echo "Usage: git-branch-history {save|s|previous|p|previous-n|n|list|ls|truncate|compact|help}"
+  echo "Usage: git-branch-history {previous|p|previous-n|n|list|ls|help}"
 }
 
 while [ $# -gt 0 ];do
   case "$1" in
-    "-g")
-      IN_GIT_DIR=1
-      ;;
-    save|s)
-      save_hist_item
-      exit
-      ;;
     previous|p)
       checkout_previous
       exit
@@ -140,15 +48,7 @@ while [ $# -gt 0 ];do
       exit
       ;;
     list|ls)
-      list
-      exit
-      ;;
-    compact)
-      compact_history
-      exit
-      ;;
-    truncate)
-      truncate_history $2
+      list $2
       exit
       ;;
     help|h)
